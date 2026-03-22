@@ -1,6 +1,7 @@
 mod cli;
-mod crypto;
-mod store;
+
+use envguard::crypto;
+use envguard::store;
 
 use anyhow::Result;
 use cli::{Cli, Command};
