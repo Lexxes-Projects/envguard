@@ -4,10 +4,12 @@ use std::path::PathBuf;
 
 use crate::crypto;
 
+/// Returns the current working directory as the project root.
 pub fn project_root() -> Result<PathBuf> {
     Ok(std::env::current_dir()?)
 }
 
+/// Returns the path to the `.envguard/` directory in the project root.
 pub fn envguard_dir() -> Result<PathBuf> {
     Ok(project_root()?.join(".envguard"))
 }
@@ -16,6 +18,10 @@ fn secrets_path(env: &str) -> Result<PathBuf> {
     Ok(envguard_dir()?.join("secrets").join(format!("{}.age", env)))
 }
 
+/// Load the user's age identity (private key).
+///
+/// First checks the `ENVGUARD_IDENTITY` environment variable (for CI/CD use),
+/// then falls back to reading `.envguard/keys/identity.age` from disk.
 pub fn load_identity() -> Result<age::x25519::Identity> {
     // Check ENVGUARD_IDENTITY env var first (for CI/CD)
     if let Ok(identity_str) = std::env::var("ENVGUARD_IDENTITY") {
@@ -50,6 +56,9 @@ pub fn load_identity() -> Result<age::x25519::Identity> {
     anyhow::bail!("No identity found in key file");
 }
 
+/// Load all trusted recipients (public keys) from `.envguard/recipients.txt`.
+///
+/// Returns a list of parsed age recipients that secrets can be encrypted for.
 pub fn load_recipients() -> Result<Vec<age::x25519::Recipient>> {
     let path = envguard_dir()?.join("recipients.txt");
     if !path.exists() {
@@ -77,6 +86,11 @@ pub fn load_recipients() -> Result<Vec<age::x25519::Recipient>> {
     Ok(recipients)
 }
 
+/// Load and decrypt secrets for a given environment.
+///
+/// Reads the encrypted file at `.envguard/secrets/{env}.age`, decrypts it
+/// using the provided identity, and parses the contents as key-value pairs.
+/// Returns an empty map if the environment file doesn't exist yet.
 pub fn load_secrets(
     env: &str,
     identity: &age::x25519::Identity,
@@ -94,6 +108,10 @@ pub fn load_secrets(
     Ok(parse_env(&content))
 }
 
+/// Encrypt and save secrets for a given environment.
+///
+/// Serializes the secrets as `KEY=VALUE` pairs, encrypts them for all
+/// provided recipients, and writes to `.envguard/secrets/{env}.age`.
 pub fn save_secrets(
     env: &str,
     secrets: &BTreeMap<String, String>,
@@ -108,6 +126,10 @@ pub fn save_secrets(
     Ok(())
 }
 
+/// Parse a `.env` formatted string into key-value pairs.
+///
+/// Handles comments (lines starting with `#`), empty lines,
+/// and values with single or double quotes.
 pub fn parse_env(content: &str) -> BTreeMap<String, String> {
     let mut map = BTreeMap::new();
 
