@@ -15,10 +15,9 @@ pub fn generate_identity() -> Result<(String, String)> {
 }
 
 pub fn encrypt(plaintext: &[u8], recipients: &[age::x25519::Recipient]) -> Result<Vec<u8>> {
-    let encryptor = age::Encryptor::with_recipients(
-        recipients.iter().map(|r| r as &dyn age::Recipient),
-    )
-    .context("No recipients")?;
+    let encryptor =
+        age::Encryptor::with_recipients(recipients.iter().map(|r| r as &dyn age::Recipient))
+            .context("No recipients")?;
 
     let mut encrypted = vec![];
     let mut writer = encryptor.wrap_output(&mut encrypted)?;

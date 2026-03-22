@@ -17,6 +17,20 @@ fn secrets_path(env: &str) -> Result<PathBuf> {
 }
 
 pub fn load_identity() -> Result<age::x25519::Identity> {
+    // Check ENVGUARD_IDENTITY env var first (for CI/CD)
+    if let Ok(identity_str) = std::env::var("ENVGUARD_IDENTITY") {
+        for line in identity_str.lines() {
+            let line = line.trim();
+            if line.starts_with('#') || line.is_empty() {
+                continue;
+            }
+            return line
+                .parse::<age::x25519::Identity>()
+                .map_err(|_| anyhow::anyhow!("Invalid identity in ENVGUARD_IDENTITY"));
+        }
+        anyhow::bail!("No identity found in ENVGUARD_IDENTITY");
+    }
+
     let path = envguard_dir()?.join("keys").join("identity.age");
     if !path.exists() {
         anyhow::bail!("Not initialized. Run: envguard init");
@@ -94,7 +108,7 @@ pub fn save_secrets(
     Ok(())
 }
 
-fn parse_env(content: &str) -> BTreeMap<String, String> {
+pub fn parse_env(content: &str) -> BTreeMap<String, String> {
     let mut map = BTreeMap::new();
 
     for line in content.lines() {

@@ -2,12 +2,17 @@
   <h1 align="center">envguard</h1>
   <p align="center">Encrypted .env files that just work.</p>
   <p align="center">
+    <a href="https://github.com/Lexxes-Projects/envguard/actions"><img src="https://img.shields.io/github/actions/workflow/status/Lexxes-Projects/envguard/ci.yml?style=flat-square" alt="CI"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
     <a href="https://ko-fi.com/lexxes"><img src="https://img.shields.io/badge/Ko--fi-Support%20envguard-ff5e5b?style=flat-square&logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
   </p>
 </p>
 
 ---
+
+<p align="center">
+  <img src="demo.gif" alt="envguard demo" width="600">
+</p>
 
 Stop sharing `.env` files over Slack. **envguard** encrypts your secrets, commits them to git, and lets your whole team decrypt — without a server, SaaS, or complex setup.
 
@@ -96,6 +101,17 @@ envguard get DATABASE_URL
 # List all secret names
 envguard list
 envguard list -e production
+
+# Remove a secret
+envguard remove API_KEY
+```
+
+### Import existing .env files
+
+```bash
+# Import from a .env file (encrypts everything in one step)
+envguard import .env
+envguard import .env.production -e production
 ```
 
 ### Run with secrets

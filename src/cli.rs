@@ -5,7 +5,7 @@ use clap::{Parser, Subcommand};
     name = "envguard",
     about = "Encrypted .env files that just work.\n\nReplace plaintext secrets with git-safe encrypted vaults.\nZero config, single binary, built-in team sharing.",
     version,
-    after_help = "♥ If envguard saves you time, consider sponsoring: https://ko-fi.com/lexxes"
+    after_help = "If envguard saves you time, consider sponsoring: https://ko-fi.com/lexxes"
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -33,6 +33,26 @@ pub enum Command {
         /// Secret name
         key: String,
         /// Environment
+        #[arg(short, long, default_value = "default")]
+        env: String,
+    },
+
+    /// Remove a secret
+    #[command(alias = "rm")]
+    Remove {
+        /// Secret name to remove
+        key: String,
+        /// Environment
+        #[arg(short, long, default_value = "default")]
+        env: String,
+    },
+
+    /// Import secrets from a .env file
+    Import {
+        /// Path to .env file (default: .env)
+        #[arg(default_value = ".env")]
+        file: String,
+        /// Environment to import into
         #[arg(short, long, default_value = "default")]
         env: String,
     },

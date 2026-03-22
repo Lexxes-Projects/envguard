@@ -12,6 +12,8 @@ fn main() -> Result<()> {
         Command::Init => cmd_init()?,
         Command::Set { key, value, env } => cmd_set(&key, &value, &env)?,
         Command::Get { key, env } => cmd_get(&key, &env)?,
+        Command::Remove { key, env } => cmd_remove(&key, &env)?,
+        Command::Import { file, env } => cmd_import(&file, &env)?,
         Command::List { env } => cmd_list(&env)?,
         Command::Run { env, command } => cmd_run(&env, &command)?,
         Command::Trust { public_key } => cmd_trust(&public_key)?,
@@ -43,14 +45,16 @@ fn cmd_init() -> Result<()> {
     if project_gitignore.exists() {
         let content = std::fs::read_to_string(&project_gitignore)?;
         if !content.contains(".envguard/keys/") {
-            let mut f = std::fs::OpenOptions::new().append(true).open(&project_gitignore)?;
+            let mut f = std::fs::OpenOptions::new()
+                .append(true)
+                .open(&project_gitignore)?;
             use std::io::Write;
             writeln!(f, "\n# envguard private keys")?;
             writeln!(f, ".envguard/keys/")?;
         }
     }
 
-    eprintln!("✓ Initialized envguard");
+    eprintln!("Initialized envguard");
     eprintln!("  Your public key (share with teammates):");
     eprintln!("  {}", public_key);
     eprintln!();
@@ -65,7 +69,7 @@ fn cmd_set(key: &str, value: &str, env: &str) -> Result<()> {
     let mut secrets = store::load_secrets(env, &identity)?;
     secrets.insert(key.to_string(), value.to_string());
     store::save_secrets(env, &secrets, &recipients)?;
-    eprintln!("✓ Set {} ({})", key, env);
+    eprintln!("Set {} ({})", key, env);
     Ok(())
 }
 
@@ -76,6 +80,47 @@ fn cmd_get(key: &str, env: &str) -> Result<()> {
         Some(value) => println!("{}", value),
         None => anyhow::bail!("Key '{}' not found in {}", key, env),
     }
+    Ok(())
+}
+
+fn cmd_remove(key: &str, env: &str) -> Result<()> {
+    let identity = store::load_identity()?;
+    let recipients = store::load_recipients()?;
+    let mut secrets = store::load_secrets(env, &identity)?;
+
+    if secrets.remove(key).is_none() {
+        anyhow::bail!("Key '{}' not found in {}", key, env);
+    }
+
+    store::save_secrets(env, &secrets, &recipients)?;
+    eprintln!("Removed {} ({})", key, env);
+    Ok(())
+}
+
+fn cmd_import(file: &str, env: &str) -> Result<()> {
+    let path = std::path::Path::new(file);
+    if !path.exists() {
+        anyhow::bail!("File not found: {}", file);
+    }
+
+    let content = std::fs::read_to_string(path)?;
+    let imported = store::parse_env(&content);
+
+    if imported.is_empty() {
+        anyhow::bail!("No secrets found in {}", file);
+    }
+
+    let identity = store::load_identity()?;
+    let recipients = store::load_recipients()?;
+    let mut secrets = store::load_secrets(env, &identity)?;
+
+    let count = imported.len();
+    for (key, value) in imported {
+        secrets.insert(key, value);
+    }
+
+    store::save_secrets(env, &secrets, &recipients)?;
+    eprintln!("Imported {} secrets from {} ({})", count, file, env);
     Ok(())
 }
 
@@ -114,7 +159,9 @@ fn cmd_trust(public_key: &str) -> Result<()> {
     }
 
     {
-        let mut f = std::fs::OpenOptions::new().append(true).open(&recipients_path)?;
+        let mut f = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&recipients_path)?;
         use std::io::Write;
         writeln!(f, "{}", public_key)?;
     }
@@ -135,7 +182,7 @@ fn cmd_trust(public_key: &str) -> Result<()> {
         }
     }
 
-    eprintln!("✓ Trusted new key and re-encrypted all secrets");
+    eprintln!("Trusted new key and re-encrypted all secrets");
     eprintln!("  Total recipients: {}", recipients.len());
     Ok(())
 }
@@ -148,7 +195,11 @@ fn cmd_export(env: &str) -> Result<()> {
     for key in keys {
         let value = &secrets[key];
         if value.contains(' ') || value.contains('"') || value.contains('#') {
-            println!("{}=\"{}\"", key, value.replace('\\', "\\\\").replace('"', "\\\""));
+            println!(
+                "{}=\"{}\"",
+                key,
+                value.replace('\\', "\\\\").replace('"', "\\\"")
+            );
         } else {
             println!("{}={}", key, value);
         }
