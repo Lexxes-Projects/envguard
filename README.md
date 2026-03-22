@@ -3,6 +3,7 @@
   <p align="center"><strong>Encrypted .env files that just work.</strong></p>
   <p align="center">
     <a href="https://github.com/Lexxes-Projects/envguard/actions"><img src="https://img.shields.io/github/actions/workflow/status/Lexxes-Projects/envguard/ci.yml?style=flat-square" alt="CI"></a>
+    <a href="https://crates.io/crates/envguard"><img src="https://img.shields.io/crates/v/envguard?style=flat-square" alt="crates.io"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
     <a href="https://ko-fi.com/lexxes"><img src="https://img.shields.io/badge/Ko--fi-Support%20envguard-ff5e5b?style=flat-square&logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
   </p>
