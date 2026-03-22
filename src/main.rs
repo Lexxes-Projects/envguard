@@ -18,6 +18,7 @@ fn main() -> Result<()> {
         Command::Run { env, command } => cmd_run(&env, &command)?,
         Command::Trust { public_key } => cmd_trust(&public_key)?,
         Command::Export { env } => cmd_export(&env)?,
+        Command::Rekey => cmd_rekey()?,
         Command::Keys => cmd_keys()?,
     }
 
@@ -204,6 +205,35 @@ fn cmd_export(env: &str) -> Result<()> {
             println!("{}={}", key, value);
         }
     }
+    Ok(())
+}
+
+fn cmd_rekey() -> Result<()> {
+    let identity = store::load_identity()?;
+    let recipients = store::load_recipients()?;
+
+    let secrets_dir = store::envguard_dir()?.join("secrets");
+    if !secrets_dir.exists() {
+        anyhow::bail!("No secrets to re-encrypt");
+    }
+
+    let mut count = 0;
+    for entry in std::fs::read_dir(&secrets_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) == Some("age") {
+            let env_name = path.file_stem().unwrap().to_string_lossy().to_string();
+            let secrets = store::load_secrets(&env_name, &identity)?;
+            store::save_secrets(&env_name, &secrets, &recipients)?;
+            count += 1;
+        }
+    }
+
+    eprintln!(
+        "Re-encrypted {} environment(s) for {} recipient(s)",
+        count,
+        recipients.len()
+    );
     Ok(())
 }
 

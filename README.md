@@ -238,7 +238,7 @@ If you're the only person with access and you lose your key, the secrets are unr
 <summary><strong>How do I revoke someone's access?</strong></summary>
 
 1. Remove their public key from `.envguard/recipients.txt`
-2. Re-encrypt all secrets: run `envguard set` on any key (this triggers re-encryption for the current recipient list)
+2. Re-encrypt all secrets: `envguard rekey`
 3. Rotate any secrets the revoked person had access to — they may have saved decrypted copies
 
 Note: They can still decrypt older versions of the encrypted files from git history. Rotate your secrets after revoking access.

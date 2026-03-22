@@ -87,6 +87,9 @@ pub enum Command {
         env: String,
     },
 
+    /// Re-encrypt all secrets for current recipients (use after removing a key from recipients.txt)
+    Rekey,
+
     /// Show your public key (share with teammates)
     Keys,
 }
