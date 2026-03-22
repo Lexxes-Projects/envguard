@@ -70,8 +70,8 @@ Your entire team can now clone the repo and decrypt — no Slack messages, no "c
 curl -sSL https://github.com/Lexxes-Projects/envguard/releases/latest/download/envguard-linux-x86_64 -o envguard
 chmod +x envguard && sudo mv envguard /usr/local/bin/
 
-# Or install from source
-cargo install envguard
+# Or build from source (requires Rust)
+cargo install --git https://github.com/Lexxes-Projects/envguard
 ```
 
 ## How it works
